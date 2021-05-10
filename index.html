@@ -1,113 +1,114 @@
 ﻿<!DOCTYPE html>
 <html lang="zh-TW">
-	<head>
-		<meta charset="UTF-8">
-		<meta content="width=device-width, initial-scale=1" name="viewport">
-		<title>口罩地圖 | Kai Wu Workspace</title>
-		
-		<meta content="及時顯示附近可購買口罩的健保特約藥局，30秒自動更新。" name="description"/>
-        <meta content="Kai Wu" name="author"/>
-		<meta content="global" name="distribution"/>
-		<meta content="general" name="rating"/>
-		
-		<meta content="Kai Wu Workspace" property="og:site_name"/>
-		<meta content="口罩地圖 | Kai Wu Workspace" property="og:title"/>
-		<meta content="及時顯示附近可購買口罩的健保特約藥局，30秒自動更新。" property="og:description"/>
-		<meta content="https://chengkai505.github.io/Mask-Map/" property="og:url"/>
-		<meta content="zh_tw" property="og:locale"/>
-		
-		<meta content="website" property="og:type"/>
-        <meta content="screenshot.jpg" property="og:image"/>
-        <meta content="1920" property="og:image:width"/>
-        <meta content="897" property="og:image:height"/>
-		<meta content="口罩地圖" property="og:image:alt"/>
-		
-		<meta content="https://www.facebook.com/kai73002981" property="article:author"/>
-		<meta content="100002230311263" property="fb:admins"/>
-		<meta content="464054490444742" property="fb:app_id"/>
-		
-		<meta content="口罩地圖 | Kai Wu Workspace" name="twitter:title"/>
-		<meta content="summary" name="twitter:card"/>
-		<meta content="@Kai_Wu_TW" name="twitter:site"/>
-		<meta content="@Kai_Wu_TW" name="twitter:creator"/>
-        <meta content="screenshot.jpg" name="twitter:image"/>
-		
-		<link href="https://chengkai505.github.io/Mask-Map/" rel="canonical"/>
-		<link rel="shortcut icon" href="/favicon.ico">
-		
-		<link rel="stylesheet" href="css/leaflet.css">
-		<link rel="stylesheet" href="css/main.css">
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans|Noto+Sans+TC:400,900&display=swap">
-		<script async data-main="js/main" src="js/require.js"></script>
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-63074009-3"></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-			function gtag(){dataLayer.push(arguments);}
-			gtag('js', new Date());
 
-			gtag('config', 'UA-63074009-3');
-		</script>
-	</head>
-	<body>
-		<div id="information">
-			<h1 id="logo">口罩地圖</h1>
-			<div class="legend">
-				<div class="sufficient">50%以上</div>
-				<div class="warning">49%~21%</div>
-				<div class="emergency">20%以下</div>
-				<div class="sold-out">無存貨</div>
-			</div>
-			<div class="icon-information">
-				<div class="item">
-					<div class="area"></div><span>附近有 2 間以上的藥局</span>
-				</div>
-				<div class="item">
-					<img src="images/sufficient.svg" alt="藥局圖標"><span>藥局</span></span>
-				</div>
-			</div>
-			<ul id="description">
-				<li>地圖上的圖標皆可以點擊，藥局的詳細資訊在點擊該藥局的圖標後會顯示</li>
-				<li>部分藥局因採發放號碼牌方式，方便民眾購買口罩，系統目前無法顯示已發送號碼牌數量</li>
-				<li>口罩數量以藥局實際存量為主，線上查詢之數量僅供參考</li>
-				<li>口罩地圖的更新紀錄：<a href="https://github.com/chengkai505/Mask-Map/commits/master">Commits</a></li>
-				<li>口罩地圖的原始碼：<a href="https://github.com/chengkai505/Mask-Map/">GitHub</a></li>
-				<li><a href="https://chengkai505.github.io/">由我創作的其他作品。</a></li>
-			</ul>
-			<div class="copyright">本地圖由 <a href="https://www.facebook.com/kai73002981">Kai Wu</a> 創作，以 <a href="https://github.com/chengkai505/Mask-Map/blob/master/LICENSE">GNU 第三版</a>訂立版權</div>
-		</div>
-		<div id="control-panel">
-			<button id="mask-toggle" data-tooltip="切換成人 / 兒童口罩"><span class="fas fa-child"></span></button>
-			<button id="current-location" data-tooltip="移動至目前位置"><span class="fas fa-location-arrow"></span></button>
-			<button id="zoom-in" data-tooltip="放大"><span class="fas fa-plus"></span></button>
-			<button id="zoom-out" data-tooltip="縮小"><span class="fas fa-minus"></span></button>
-			<button id="help" data-tooltip="使用手冊"><span class="fas fa-question"></span></button>
-			<button id="menu" data-tooltip="收合"><span class="fas fa-chevron-up"></span></button>
-		</div>
-		<div id="guide">
-			<h2>口罩地圖使用說明手冊</h2>
-			<p>首先，非常感謝您使用本口罩地圖，接下來為您說明介面中各按鈕的使用方法。此外，「<a href="https://kai73002981.blogspot.com/2020/02/mask-map-development.html">實作口罩地圖後記與心得，開發口罩地圖並沒有想像中的簡單</a>」是我的開發心得，歡迎來踏踏。</p>
-			<h3>切換成人 / 兒童口罩</h3>
-			<button><span class="fas fa-child"></span></button>
-			<p>地圖中每個標記點會顯示該藥局的庫存狀況，預設是顯示成人口罩的庫存狀況，上方的這個按鈕按下後切換成顯示兒童口罩的庫存狀況並且該按鈕會變成綠色底。讓您能快速辨別現在顯示的是成人口罩的庫存狀況，還是兒童口罩的庫存狀況。</p>
-			<h3>移動至目前位置</h3>
-			<button><span class="fas fa-location-arrow"></span></button>
-			<p>若您因為尋找藥局時找不到目前位置，那麼這個按鈕可以幫助您馬上回到目前位置，當然您必須先授權本地圖取得您的目前位置才行，第一次點擊時只會標出目前位置，往後的點擊則會將地圖中心點移動至目前位置。</p>
-			<h3>放大</h3>
-			<button><span class="fas fa-plus"></span></button>
-			<p>這個按鈕是用來將地圖放大的。</p>
-			<h3>縮小</h3>
-			<button><span class="fas fa-minus"></span></button>
-			<p>這個按鈕是用來將地圖縮小的。</p>
-			<h3>使用手冊</h3>
-			<button><span class="fas fa-question"></span></button>
-			<p>這個按鈕是開啟本手冊的按鈕，再按一次可以將本手冊關閉。</p>
-		</div>
-		<div id="app"></div>
-		<noscript class="noscript">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>車禍事故地圖</title>
+
+    <meta content="及時顯示附近事故的地點，請多加留意安全。" name="description" />
+    <meta content="Nancy" name="author" />
+    <meta content="global" name="distribution" />
+    <meta content="general" name="rating" />
+
+    <meta content="Nancy Workspace" property="og:site_name" />
+    <meta content="車禍地圖 | Nancy Workspace" property="og:title" />
+    <meta content="及時顯示附近事故的地點，請多加留意安全。" property="og:description" />
+    <meta content="zh_tw" property="og:locale" />
+
+    <meta content="website" property="og:type" />
+    <meta content="screenshot.jpg" property="og:image" />
+    <meta content="1920" property="og:image:width" />
+    <meta content="897" property="og:image:height" />
+    <meta content="事故地圖" property="og:image:alt" />
+
+    <!-- <meta content="https://www.facebook.com/kai73002981" property="article:author" /> -->
+    <meta content="100002230311263" property="fb:admins" />
+    <meta content="464054490444742" property="fb:app_id" />
+
+    <!-- <meta content="口罩地圖 | Kai Wu Workspace" name="twitter:title" /> -->
+    <!-- <meta content="summary" name="twitter:card" /> -->
+    <!-- <meta content="@Kai_Wu_TW" name="twitter:site" /> -->
+    <!-- <meta content="@Kai_Wu_TW" name="twitter:creator" /> -->
+    <!-- <meta content="screenshot.jpg" name="twitter:image" /> -->
+
+    <!-- <link href="https://chengkai505.github.io/Mask-Map/" rel="canonical" /> -->
+    <!-- <link rel="shortcut icon" href="/favicon.ico"> -->
+
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans|Noto+Sans+TC:400,900&display=swap">
+    <script async data-main="js/main" src="js/require.js"></script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-63074009-3"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-63074009-3');
+    </script>
+</head>
+
+<body>
+    <div id="information">
+        <h1 id="logo">事故地圖</h1>
+        <div class="legend">
+            <div class="sufficient">50%以上</div>
+            <div class="warning">49%~21%</div>
+            <div class="emergency">20%以下</div>
+            <div class="sold-out">無存貨</div>
+        </div>
+        <div class="icon-information">
+            <div class="item">
+                <div class="area"></div><span>附近有 2 次以上的事故</span>
+            </div>
+            <div class="item">
+                <img src="images/sufficient.svg" alt="藥局圖標"><span>事故地點</span></span>
+            </div>
+        </div>
+        <ul id="description">
+            <li>地圖上的圖標皆可以點擊，車禍的詳細資訊在點擊該圖標後會顯示</li>
+            <li>事故資料以政府開放資料為主，線上查詢之資訊僅供參考</li>
+        </ul>
+        <div class="copyright">本地圖修改自 <a href="https://www.facebook.com/kai73002981">Kai Wu</a>的口罩地圖，以 <a href="https://github.com/chengkai505/Mask-Map/blob/master/LICENSE">GNU 第三版</a>訂立版權</div>
+    </div>
+    <div id="control-panel">
+        <!-- <button id="mask-toggle" data-tooltip="切換成人 / 兒童口罩"><span class="fas fa-child"></span></button> -->
+        <button id="current-location" data-tooltip="移動至目前位置"><span class="fas fa-location-arrow"></span></button>
+        <button id="zoom-in" data-tooltip="放大"><span class="fas fa-plus"></span></button>
+        <button id="zoom-out" data-tooltip="縮小"><span class="fas fa-minus"></span></button>
+        <button id="help" data-tooltip="使用手冊"><span class="fas fa-question"></span></button>
+        <button id="menu" data-tooltip="收合"><span class="fas fa-chevron-up"></span></button>
+    </div>
+    <div id="guide">
+        <h2>車禍地圖使用說明手冊</h2>
+        <p>首先，非常感謝您使用本口罩地圖，接下來為您說明介面中各按鈕的使用方法。</p>
+        <!-- <h3>切換成人 / 兒童口罩</h3>
+        <button><span class="fas fa-child"></span></button> -->
+        <!-- <p>地圖中每個標記點會顯示該藥局的庫存狀況，預設是顯示成人口罩的庫存狀況，上方的這個按鈕按下後切換成顯示兒童口罩的庫存狀況並且該按鈕會變成綠色底。讓您能快速辨別現在顯示的是成人口罩的庫存狀況，還是兒童口罩的庫存狀況。</p> -->
+        <h3>移動至目前位置</h3>
+        <button><span class="fas fa-location-arrow"></span></button>
+        <p>若您因為找不到目前位置，那麼這個按鈕可以幫助您馬上回到目前位置，當然您必須先授權本地圖取得您的目前位置才行，第一次點擊時只會標出目前位置，往後的點擊則會將地圖中心點移動至目前位置。</p>
+        <h3>放大</h3>
+        <button><span class="fas fa-plus"></span></button>
+        <p>這個按鈕是用來將地圖放大的。</p>
+        <h3>縮小</h3>
+        <button><span class="fas fa-minus"></span></button>
+        <p>這個按鈕是用來將地圖縮小的。</p>
+        <h3>使用手冊</h3>
+        <button><span class="fas fa-question"></span></button>
+        <p>這個按鈕是開啟本手冊的按鈕，再按一次可以將本手冊關閉。</p>
+    </div>
+    <div id="app"></div>
+    <noscript class="noscript">
 			<link rel="stylesheet" href="css/noscript.css">
 			<h1>口罩地圖</h1>
 			<span class="description">因為本地圖需要使用 JavaScript，所以請您開啟瀏覽器的 JavaScript 功能！感謝配合及諒解。</span>
 		</noscript>
-	</body>
+</body>
+
 </html>
