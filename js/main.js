@@ -53,7 +53,17 @@ function map_test() {
         if (accident_data[i].y == "" || accident_data[i].x == "") {
             continue;
         }
-        var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: currentIcon });
+        var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: currentIcon })
+        node.bindPopup(
+            `<p>死亡人數: ${accident_data[i].death_count}</p>
+            <p>受傷人數: ${accident_data[i].hurt_count}</p>
+            <p>時間: ${accident_data[i].datetime}</p>
+            <p>當事人人數: ${accident_data[i].litigant}</p>
+            <p>受傷程度: ${get_hurt_string(accident_data[i].injury_degree)}</p>
+            <p>天氣: ${get_weather_string(accident_data[i].weather)}</p>
+            <p>道路型態: ${get_load_type_string(accident_data[i].load_type)}</p>
+            <p>道路型態: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
+            `);
         markers.addLayer(node);
     }
     map.addLayer(markers);
@@ -72,6 +82,138 @@ function map_test() {
     //     .forEach(item => markers.addLayer(item)); // 把marker加入 L.markerCluster
     // map.addLayer(markers);
 
+}
+
+function get_accident_location_type_string(accident_location) {
+    switch (accident_location) {
+        case "1":
+            return "交叉口內";
+        case "2":
+            return "交叉口附近";
+        case "3":
+            return "機車待轉區";
+        case "4":
+            return "機車停等區";
+        case "5":
+            return "交通島";
+        case "6":
+            return "迴轉道";
+        case "7":
+            return "快車道";
+        case "8":
+            return "慢車道"
+        case "9":
+            return "一般車道(未劃分快慢車道)";
+        case "10":
+            return "公車專用道";
+        case "11":
+            return "機車專用道";
+        case "12":
+            return "機車優先道";
+        case "13":
+            return "路肩、路緣";
+        case "14":
+            return "加速車道";
+        case "15":
+            return "減速車道";
+        case "16":
+            return "直線匝道";
+        case "17":
+            return "環道匝道";
+        case "18":
+            return "行人穿越道";
+        case "19":
+            return "穿越道附近";
+        case "20":
+            return "人行道";
+        case "21":
+            return "收費站附近";
+        case "22":
+            return "其他";
+        default:
+            return "";
+    }
+}
+
+function get_load_type_string(load_type) {
+    switch (load_type) {
+        case "1":
+            return "平交道(有遮斷器)";
+        case "2":
+            return "平交道(無遮斷器)";
+        case "3":
+            return "三岔路";
+        case "4":
+            return "四岔路";
+        case "5":
+            return "多岔路";
+        case "6":
+            return "隧道";
+        case "7":
+            return "地下道";
+        case "8":
+            return "橋梁"
+        case "9":
+            return "涵洞";
+        case "10":
+            return "高架道路";
+        case "11":
+            return "彎曲路及附近";
+        case "12":
+            return "坡路";
+        case "13":
+            return "巷弄";
+        case "14":
+            return "直路";
+        case "15":
+            return "其他";
+        case "16":
+            return "圓環";
+        case "17":
+            return "廣場";
+        default:
+            return "";
+    }
+}
+
+function get_hurt_string(injury_degree) {
+    switch (injury_degree) {
+        case "1":
+            return "24小時死亡";
+        case "2":
+            return "受傷";
+        case "3":
+            return "未受傷";
+        case "4":
+            return "不明";
+        case "5":
+            return "2-30日內死亡";
+        default:
+            return "";
+    }
+}
+
+function get_weather_string(weather) {
+    switch (weather) {
+        case "1":
+            return "暴雨";
+        case "2":
+            return "強風";
+        case "3":
+            return "風沙";
+        case "4":
+            return "霧或煙";
+        case "5":
+            return "雪";
+        case "6":
+            return "雨";
+        case "7":
+            return "陰";
+        case "8":
+            return "晴";
+        default:
+            return "";
+    }
 }
 
 function create_icon(cluster) {
