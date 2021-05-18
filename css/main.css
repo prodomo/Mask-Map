@@ -138,24 +138,24 @@ a:hover {
 	padding: .3rem;
 }
 .legend .sufficient,#app .sufficient:before,#app .sufficient:after {
-	background: rgba(16, 120, 121, .75);
+	background: rgba(182, 23, 23, 0.75);
 }
 .legend .warning,#app .warning:before,#app .warning:after {
-	background: rgba(230, 127, 34, .65);
+	background: rgba(230, 129, 34, 0.65);
 }
 .legend .emergency,#app .emergency:before,#app .emergency:after {
-	background: rgba(233, 30, 58, .3);
+	background: rgba(230, 233, 30, 0.671);
 	color: #333;
 }
 .legend .sold-out,#app .sold-out:before,#app .sold-out:after {
-	background: rgba(153,153,153,.5);
+	background: rgba(16, 120, 121, 0.5);
 }
 .copyright {
 	font-size: .9rem;
 	color: #555
 }
 .sufficient,.emergency {
-	color: #fff
+	color: #333
 }
 .warning,.sold-out{
 	color: #333

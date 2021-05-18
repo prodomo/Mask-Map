@@ -3,7 +3,7 @@
 const MAX_ADULT_STOCK = 1800,
     MAX_CHILD_STOCK = 200,
     FLY_TO_ZOOM = 19,
-    INITIAL_ZOOM = 6,
+    INITIAL_ZOOM = 10,
     UPDATE_DELAY = 30000,
     SOURCE_URL = "https://data.nhi.gov.tw/resource/mask/maskdata.csv",
     SOURCE_FILE = "data/108_A1_A2_x_y.csv";
@@ -29,12 +29,12 @@ function map_test() {
     let currentIcon = L.icon({ iconUrl: "images/current.svg", className: "animation", iconSize: [24, 24] });
     let currentMar = L.marker([0, 0], { icon: currentIcon });
     map.addLayer(osm);
-    map.setView([23.97565, 120.97388], INITIAL_ZOOM);
+    map.setView([24.97565, 121.47388], INITIAL_ZOOM);
     map.setMaxBounds([
         [90, -180],
         [-90, 180]
     ]);
-
+    
     var markers = L.markerClusterGroup({
         iconCreateFunction: function(cluster) {
             const number = cluster.getChildCount();
@@ -44,16 +44,54 @@ function map_test() {
                 className: icon.className,
                 iconSize: icon.point
             });
-        }
+        },
+        animate: true,
+        maxClusterRadius: 40
     });
 
+    document.getElementById("zoom-in").addEventListener("click", () => { map.zoomIn() });
+    document.getElementById("zoom-out").addEventListener("click", () => { map.zoomOut() })
+
+    let childrenStat = false;
+    let locationPermit = false;
+    /* add current location node to the map*/
+    document.getElementById("current-location").addEventListener("click", function() {
+        if (locationPermit) {
+            map.flyTo(currentMar.getLatLng(), 18);
+        }
+        if (navigator.geolocation) {
+            let pos = navigator.geolocation.watchPosition(function(geo) {
+                currentMar.setLatLng([geo.coords.latitude, geo.coords.longitude]);
+                currentMar.bindPopup("<p class='user-location'>目前位置</p><p class='loc-accuracy'>GPS 精確度：" + Math.round(geo.coords.accuracy * 100) / 100 + " 公尺</p>");
+                currentMar.addTo(map);
+                // markers.eachLayer(function(layer) {
+                //     layer.getPopup().getContent().getElementsByClassName("store-distance")[0].innerText = geoDistance([
+                //         [geo.coords.latitude, geo.coords.longitude],
+                //         [layer.getPopup().getContent().dataset.lat, layer.getPopup().getContent().dataset.lng]
+                //     ]);
+                // });
+                document.getElementById("app").classList.add("allow-location");
+                locationPermit = true;
+            }, function() {
+                alert("定位資料取得失敗，故不能進行目前位置顯示");
+                document.getElementById("app").classList.remove("allow-location");
+                locationPermit = false;
+                currentMar.remove();
+            }, { enableHighAccuracy: true });
+        }
+    });
+    
+    document.getElementById("menu").addEventListener("click", click_menu);
+    document.getElementById("app").addEventListener("click", click_app);
+    document.getElementById("help").addEventListener("click", click_help);
 
     console.log(accident_data[0].x, accident_data[0].y);
+    /* add accident nodes to the map*/
     for (var i = 0; i < accident_data.length - 1; i++) {
         if (accident_data[i].y == "" || accident_data[i].x == "") {
             continue;
         }
-        var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: currentIcon })
+        var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: MarkerLogic(accident_data[i].death_count) })
         node.bindPopup(
             `<p>死亡人數: ${accident_data[i].death_count}</p>
             <p>受傷人數: ${accident_data[i].hurt_count}</p>
@@ -67,20 +105,6 @@ function map_test() {
         markers.addLayer(node);
     }
     map.addLayer(markers);
-    // var markers = L.markerClusterGroup({
-    //     iconCreateFunction: function(cluster) {
-    //         const number = cluster.getChildCount();
-    //         return L.divIcon({
-    //             html: number,
-    //             className: 'icon-cluster sold-out',
-    //             iconSize: L.point(25, 25)
-    //         });
-    //     }
-    // });
-    // arr.map(item => L.marker(new L.LatLng(item.Y, item.X), { icon: currentIcon })
-    //         .bindPopup(`<p>經度: ${item.X}</p><p>緯度: ${item.Y}</p>`)) // 資訊視窗
-    //     .forEach(item => markers.addLayer(item)); // 把marker加入 L.markerCluster
-    // map.addLayer(markers);
 
 }
 
@@ -245,6 +269,15 @@ function IconLogic(number) { // 數量
     return {
         className: className,
         point: point
+    }
+}
+
+function MarkerLogic(death_count) {
+    var int_death_count = parseInt(death_count, 10);
+    if(int_death_count > 0) {
+        return L.icon({ iconUrl: "images/emergency.svg", iconSize: [48, 48], iconAnchor: [24, 48], popupAnchor: [0, -48] });
+    }else{
+        return L.icon({ iconUrl: "images/warning.svg", iconSize: [48, 48], iconAnchor: [24, 48], popupAnchor: [0, -48] });
     }
 }
 
