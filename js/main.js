@@ -6,9 +6,9 @@ const MAX_ADULT_STOCK = 1800,
     INITIAL_ZOOM = 10,
     UPDATE_DELAY = 30000,
     SOURCE_URL = "https://data.nhi.gov.tw/resource/mask/maskdata.csv",
-    SOURCE_FILE = "data/108_A1_A2_x_y.csv";
+    SOURCE_FILE = "data/108_A1_A2_x_y.csv",
     // SOURCE_FILE = "data/test.csv";
-    ALERT_COUNT = 5
+    ALERT_COUNT = 5;
 
 require(["pace.min", "leaflet"], function() {
     require(["leaflet.markercluster"], function() {
