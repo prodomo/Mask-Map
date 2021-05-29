@@ -7,6 +7,8 @@ const MAX_ADULT_STOCK = 1800,
     UPDATE_DELAY = 30000,
     SOURCE_URL = "https://data.nhi.gov.tw/resource/mask/maskdata.csv",
     SOURCE_FILE = "data/108_A1_A2_x_y.csv";
+    // SOURCE_FILE = "data/test.csv";
+    ALERT_COUNT = 5
 
 require(["pace.min", "leaflet"], function() {
     require(["leaflet.markercluster"], function() {
@@ -49,11 +51,19 @@ function map_test() {
         maxClusterRadius: 40
     });
 
+    let childrenStat = false;
+    let locationPermit = false;
+    var curr_latitude = 0;
+    var curr_longitude = 0;
+
+    /* add accident nodes to the map*/
+    var nodes = get_nodes(accident_data, curr_latitude, curr_longitude);
+    markers.addLayer(nodes[0]);
+    map.addLayer(markers);
+
     document.getElementById("zoom-in").addEventListener("click", () => { map.zoomIn() });
     document.getElementById("zoom-out").addEventListener("click", () => { map.zoomOut() })
 
-    let childrenStat = false;
-    let locationPermit = false;
     /* add current location node to the map*/
     document.getElementById("current-location").addEventListener("click", function() {
         if (locationPermit) {
@@ -64,12 +74,8 @@ function map_test() {
                 currentMar.setLatLng([geo.coords.latitude, geo.coords.longitude]);
                 currentMar.bindPopup("<p class='user-location'>目前位置</p><p class='loc-accuracy'>GPS 精確度：" + Math.round(geo.coords.accuracy * 100) / 100 + " 公尺</p>");
                 currentMar.addTo(map);
-                // markers.eachLayer(function(layer) {
-                //     layer.getPopup().getContent().getElementsByClassName("store-distance")[0].innerText = geoDistance([
-                //         [geo.coords.latitude, geo.coords.longitude],
-                //         [layer.getPopup().getContent().dataset.lat, layer.getPopup().getContent().dataset.lng]
-                //     ]);
-                // });
+                curr_latitude = geo.coords.latitude;
+                curr_longitude = geo.coords.longitude;
                 document.getElementById("app").classList.add("allow-location");
                 locationPermit = true;
             }, function() {
@@ -79,17 +85,34 @@ function map_test() {
                 currentMar.remove();
             }, { enableHighAccuracy: true });
         }
+        markers.clearLayers();
+        var new_nodes = get_nodes(accident_data, curr_latitude, curr_longitude);
+        markers.addLayer(new_nodes[0]);
+        markers.refreshClusters();
+        if(new_nodes[1] >= ALERT_COUNT) {
+            setTimeout(function() { alert("鄰近事故熱點，請多加留意"); }, 5000);
+        }
     });
     
     document.getElementById("menu").addEventListener("click", click_menu);
     document.getElementById("app").addEventListener("click", click_app);
     document.getElementById("help").addEventListener("click", click_help);
+}
 
-    console.log(accident_data[0].x, accident_data[0].y);
-    /* add accident nodes to the map*/
+function get_nodes(accident_data, curr_latitude, curr_longitude)
+{
+    var node_array = [];
+    var close_count = 0;
     for (var i = 0; i < accident_data.length - 1; i++) {
+        var distance = 0;
         if (accident_data[i].y == "" || accident_data[i].x == "") {
             continue;
+        }
+        if(curr_latitude != 0 && curr_longitude != 0){
+            distance = get_distance_to_location(curr_latitude, curr_longitude, accident_data[i]);
+            if(distance > 0 && distance < 0.5) {
+                close_count+=1;
+            }
         }
         var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: MarkerLogic(accident_data[i].death_count) })
         node.bindPopup(
@@ -101,11 +124,22 @@ function map_test() {
             <p>天氣: ${get_weather_string(accident_data[i].weather)}</p>
             <p>道路型態: ${get_load_type_string(accident_data[i].load_type)}</p>
             <p>道路型態: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
+            <p>距離: ${distance} km</p>
             `);
-        markers.addLayer(node);
+        node_array.push(node);
     }
-    map.addLayer(markers);
+    var nodes = L.layerGroup(node_array);
+    return [nodes, close_count];
+}
 
+function get_distance_to_location(curr_latitude, curr_longitude, accident_data)
+{
+    if(curr_latitude !=0 && curr_longitude != 0) {
+        let test = distance(curr_latitude, curr_longitude, accident_data.y, accident_data.x);
+        return test
+    }else{
+        return -1;
+    }
 }
 
 function get_accident_location_type_string(accident_location) {
@@ -296,145 +330,6 @@ function CreatePoint(count) {　　 // count為產生的點數量
     return arr;
 }
 
-function ori_coordData_load() {
-    let map = L.map("app", { attributionControl: false, zoomControl: false, minZoom: 3, maxZoom: 19 });
-    let osmUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-    let osm = new L.TileLayer(osmUrl, { minZoom: 3, maxZoom: 19 });
-    let today = new Date();
-    let currentIcon = L.icon({ iconUrl: "images/current.svg", className: "animation", iconSize: [24, 24] });
-    let currentMar = L.marker([0, 0], { icon: currentIcon });
-    let storeIcon = [
-        L.icon({ iconUrl: "images/sold-out.svg", iconSize: [48, 48], iconAnchor: [24, 48], popupAnchor: [0, -48] }),
-        L.icon({ iconUrl: "images/emergency.svg", iconSize: [48, 48], iconAnchor: [24, 48], popupAnchor: [0, -48] }),
-        L.icon({ iconUrl: "images/warning.svg", iconSize: [48, 48], iconAnchor: [24, 48], popupAnchor: [0, -48] }),
-        L.icon({ iconUrl: "images/sufficient.svg", iconSize: [48, 48], iconAnchor: [24, 48], popupAnchor: [0, -48] })
-    ];
-    let storeClass = ["sold-out", "emergency", "warning", "sufficient"];
-    let xhr = new XMLHttpRequest();
-    let markerCluster = L.markerClusterGroup({
-        iconCreateFunction: function(cluster) {
-            let list = cluster.getAllChildMarkers(),
-                order = 0;
-            for (let i = 0; i < list.length; i++) {
-                order = order < 3 && list[i].options.icon.options.iconUrl === storeIcon[3].options.iconUrl ? 3 :
-                    order < 2 && list[i].options.icon.options.iconUrl === storeIcon[2].options.iconUrl ? 2 :
-                    order < 1 && list[i].options.icon.options.iconUrl === storeIcon[1].options.iconUrl ? 1 : order;
-            }
-            return L.divIcon({ className: "icon-cluster " + storeClass[order], iconSize: [72, 30] });
-        },
-        removeOutsideVisibleBounds: true,
-        animate: true,
-        maxClusterRadius: 40
-    });
-
-    let childrenStat = false;
-    let locationPermit = false;
-    let geoCollection = JSON.parse(this.responseText);
-
-    map.addLayer(osm);
-    map.setView([23.97565, 120.97388], INITIAL_ZOOM);
-    map.setMaxBounds([
-        [90, -180],
-        [-90, 180]
-    ]);
-    document.getElementById("zoom-in").addEventListener("click", () => { map.zoomIn() });
-    document.getElementById("zoom-out").addEventListener("click", () => { map.zoomOut() });
-    document.getElementById("current-location").addEventListener("click", function() {
-        if (locationPermit) {
-            map.flyTo(currentMar.getLatLng(), 18);
-        }
-        if (navigator.geolocation) {
-            let pos = navigator.geolocation.watchPosition(function(geo) {
-                currentMar.setLatLng([geo.coords.latitude, geo.coords.longitude]);
-                currentMar.bindPopup("<p class='user-location'>目前位置</p><p class='loc-accuracy'>GPS 精確度：" + Math.round(geo.coords.accuracy * 100) / 100 + " 公尺</p>");
-                currentMar.addTo(map);
-                markerCluster.eachLayer(function(layer) {
-                    layer.getPopup().getContent().getElementsByClassName("store-distance")[0].innerText = geoDistance([
-                        [geo.coords.latitude, geo.coords.longitude],
-                        [layer.getPopup().getContent().dataset.lat, layer.getPopup().getContent().dataset.lng]
-                    ]);
-                });
-                document.getElementById("app").classList.add("allow-location");
-                locationPermit = true;
-            }, function() {
-                alert("定位資料取得失敗，故不能進行目前位置顯示");
-                document.getElementById("app").classList.remove("allow-location");
-                locationPermit = false;
-                currentMar.remove();
-            }, { enableHighAccuracy: true });
-        }
-    });
-
-    document.getElementById("menu").addEventListener("click", click_menu);
-    document.getElementById("app").addEventListener("click", click_app);
-    document.getElementById("help").addEventListener("click", click_help);
-
-    xhr.addEventListener("load", function() {
-        let temp = ori_csvParse(this.responseText);
-        for (let i in geoCollection.features) {
-            let id = geoCollection.features[i].properties.id;
-            if (temp[id] == null) continue;
-            geoCollection.features[i].properties = temp[id];
-        }
-        let markers = L.geoJSON(geoCollection, {
-            pointToLayer: function(store, storeLocation) {
-                let marker = L.marker(storeLocation, { icon: storeIcon[markerOrder("adult", store.properties.mask_adult)] }),
-                    popupConfig = { maxWidth: "auto" },
-                    popupContent = L.DomUtil.create("div", "store-information"),
-                    storeStatus = L.DomUtil.create("div", "store-status", popupContent);
-                popupContent.dataset.lat = storeLocation.lat;
-                popupContent.dataset.lng = storeLocation.lng;
-                popupContent.dataset.id = store.properties.id;
-                for (let i = 0; i < 2; i++) {
-                    let container = L.DomUtil.create("div", "container", storeStatus),
-                        label = L.DomUtil.create("p", "label", container),
-                        numContainer = L.DomUtil.create("p", "number-container", container);
-                    switch (i) {
-                        case 0:
-                            label.innerText = "成人口罩數量";
-                            container.classList.add(storeClass[markerOrder("adult", store.properties.mask_adult)]);
-                            numContainer.innerHTML = "<span class='number'>" + store.properties.mask_adult + "</span> 片";
-                            break;
-                        case 1:
-                            label.innerText = "兒童口罩數量";
-                            container.classList.add(storeClass[markerOrder("child", store.properties.mask_child)]);
-                            numContainer.innerHTML = "<span class='number'>" + store.properties.mask_child + "</span> 片";
-                            break;
-                    }
-                }
-                let storeName = L.DomUtil.create("p", "store-name", popupContent),
-                    storeAddr = L.DomUtil.create("p", "store-address detail", popupContent),
-                    storePhon = L.DomUtil.create("p", "store-phone detail", popupContent),
-                    storeUpda = L.DomUtil.create("p", "store-updated detail", popupContent);
-                storeName.innerHTML = store.properties.name + "<span class='store-distance'></span>";
-                storeAddr.innerHTML = "<span class='icon fas fa-map-marked-alt'></span><span class='text'><a href='https://www.google.com/maps?q=" + store.properties.name + "+" + store.properties.address + "' target='_blank'>" + store.properties.address + "</a></span>";
-                storePhon.innerHTML = "<span class='icon fas fa-phone'></span><span class='text'><a href='tel:" + store.properties.phone + "'>" + store.properties.phone + "</a></span>";
-                storeUpda.innerHTML = "<span class='icon fas fa-sync-alt'></span><span class='text'>" + store.properties.updated + "</span>";
-                marker.bindPopup(popupContent, popupConfig).on("click", function() {
-                    location.hash = this.getPopup().getContent().dataset.id;
-                });
-                if (store.properties.name)
-                    return marker;
-            }
-        });
-        markerCluster.addLayer(markers);
-        map.addLayer(markerCluster);
-
-        if (location.hash != "") {
-            markerCluster.eachLayer(function(layer) {
-                let markerData = layer.getPopup().getContent().dataset;
-                if (markerData.id == location.hash.substr(1)) {
-                    map.setView([markerData.lat, markerData.lng], FLY_TO_ZOOM);
-                    layer.openPopup();
-                    return this;
-                }
-            });
-        }
-    });
-    xhr.open("GET", SOURCE_URL + "?time=" + new Date().getTime());
-    xhr.send();
-}
-
 function markerOrder(str, num) {
     let rate;
     switch (str) {
@@ -447,33 +342,25 @@ function markerOrder(str, num) {
     }
 }
 
-function geoDistance(arr) {
-    for (let i = 0; i < 2; i++)
-        for (let j = 0; j < 2; j++)
-            arr[i][j] = arr[i][j] / 180 * Math.PI;
-    let EARTH_RADIUS = 6371000,
-        d = 2 * EARTH_RADIUS * Math.asin(Math.sqrt(Math.pow(Math.sin((arr[1][0] - arr[0][0]) / 2), 2) + Math.cos(arr[0][0]) * Math.cos(arr[1][0]) * Math.pow(Math.sin((arr[1][1] - arr[0][1]) / 2), 2)));
-
-    d = d > 1000 ? (d / 1000).toFixed(2) + "km" : d.toFixed(2) + "m";
-    return d;
-}
-
-function ori_csvParse(str) {
-    let data = str.split(/\r?\n/),
-        temp = new Object;
-    data.shift();
-    for (let i in data) {
-        let rawdata = data[i].split(",");
-        temp[rawdata[0]] = new Object;
-        temp[rawdata[0]]["id"] = rawdata[0];
-        temp[rawdata[0]]["name"] = rawdata[1];
-        temp[rawdata[0]]["address"] = rawdata[2];
-        temp[rawdata[0]]["phone"] = rawdata[3];
-        temp[rawdata[0]]["mask_adult"] = rawdata[4];
-        temp[rawdata[0]]["mask_child"] = rawdata[5];
-        temp[rawdata[0]]["updated"] = rawdata[6];
-    }
-    return temp;
+function distance(lat1, lon1, lat2, lon2) {
+	if ((lat1 == lat2) && (lon1 == lon2)) {
+		return 0;
+	}
+	else {
+		var radlat1 = Math.PI * lat1/180;
+		var radlat2 = Math.PI * lat2/180;
+		var theta = lon1-lon2;
+		var radtheta = Math.PI * theta/180;
+		var dist = Math.sin(radlat1) * Math.sin(radlat2) + Math.cos(radlat1) * Math.cos(radlat2) * Math.cos(radtheta);
+		if (dist > 1) {
+			dist = 1;
+		}
+		dist = Math.acos(dist);
+		dist = dist * 180/Math.PI;
+		dist = dist * 60 * 1.1515;
+		dist = dist * 1.609344;
+		return dist.toFixed(3);
+	}
 }
 
 function csvParse(str) {
@@ -500,24 +387,7 @@ function csvParse(str) {
         item["y"] = rawdata[13];
         temp.push(item);
         counter += 1;
-        // let item = new Object;
-        // temp[rawdata[0]] = new object;
-        // temp[rawdata[0]]["datetime"] = rawdata[0];
-        // temp[rawdata[0]]["process_code"] = rawdata[1];
-        // temp[rawdata[0]]["location"] = rawdata[2];
-        // temp[rawdata[0]]["place"] = rawdata[3];
-        // temp[rawdata[0]]["death_count"] = rawdata[4];
-        // temp[rawdata[0]]["hurt_count"] = rawdata[5];
-        // temp[rawdata[0]]["litigant"] = rawdata[6];
-        // temp[rawdata[0]]["injury_degree"] = rawdata[7];
-        // temp[rawdata[0]]["weather"] = rawdata[8];
-        // temp[rawdata[0]]["rate_limit"] = rawdata[9];
-        // temp[rawdata[0]]["load_type"] = rawdata[10];
-        // temp[rawdata[0]]["accident_location"] = rawdata[11];
-        // temp[rawdata[0]]["X"] = rawdata[12];
-        // temp[rawdata[0]]["Y"] = rawdata[13];
     }
-    console.log(temp[0]);
     return temp;
 }
 
