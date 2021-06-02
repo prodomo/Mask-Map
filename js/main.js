@@ -51,7 +51,6 @@ function map_test() {
         maxClusterRadius: 40
     });
 
-    let childrenStat = false;
     let locationPermit = false;
     var curr_latitude = 0;
     var curr_longitude = 0;
@@ -113,20 +112,34 @@ function get_nodes(accident_data, curr_latitude, curr_longitude)
             if(distance > 0 && distance < 0.5) {
                 close_count+=1;
             }
+        
+            var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: MarkerLogic(accident_data[i].death_count) })
+            node.bindPopup(
+                `<p>死亡人數: ${accident_data[i].death_count}</p>
+                <p>受傷人數: ${accident_data[i].hurt_count}</p>
+                <p>時間: ${accident_data[i].datetime}</p>
+                <p>當事人人數: ${accident_data[i].litigant}</p>
+                <p>受傷程度: ${get_hurt_string(accident_data[i].injury_degree)}</p>
+                <p>天氣: ${get_weather_string(accident_data[i].weather)}</p>
+                <p>道路型態: ${get_load_type_string(accident_data[i].load_type)}</p>
+                <p>道路型態: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
+                <p>距離: ${distance} km</p>
+                `);
+                node_array.push(node);
+        }else{
+            var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: MarkerLogic(accident_data[i].death_count) })
+            node.bindPopup(
+                `<p>死亡人數: ${accident_data[i].death_count}</p>
+                <p>受傷人數: ${accident_data[i].hurt_count}</p>
+                <p>時間: ${accident_data[i].datetime}</p>
+                <p>當事人人數: ${accident_data[i].litigant}</p>
+                <p>受傷程度: ${get_hurt_string(accident_data[i].injury_degree)}</p>
+                <p>天氣: ${get_weather_string(accident_data[i].weather)}</p>
+                <p>道路型態: ${get_load_type_string(accident_data[i].load_type)}</p>
+                <p>道路型態: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
+                `);
+                node_array.push(node);
         }
-        var node = L.marker(new L.LatLng(accident_data[i].y, accident_data[i].x), { icon: MarkerLogic(accident_data[i].death_count) })
-        node.bindPopup(
-            `<p>死亡人數: ${accident_data[i].death_count}</p>
-            <p>受傷人數: ${accident_data[i].hurt_count}</p>
-            <p>時間: ${accident_data[i].datetime}</p>
-            <p>當事人人數: ${accident_data[i].litigant}</p>
-            <p>受傷程度: ${get_hurt_string(accident_data[i].injury_degree)}</p>
-            <p>天氣: ${get_weather_string(accident_data[i].weather)}</p>
-            <p>道路型態: ${get_load_type_string(accident_data[i].load_type)}</p>
-            <p>道路型態: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
-            <p>距離: ${distance} km</p>
-            `);
-        node_array.push(node);
     }
     var nodes = L.layerGroup(node_array);
     return [nodes, close_count];
