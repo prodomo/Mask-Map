@@ -122,7 +122,7 @@ function get_nodes(accident_data, curr_latitude, curr_longitude)
                 <p>受傷程度: ${get_hurt_string(accident_data[i].injury_degree)}</p>
                 <p>天氣: ${get_weather_string(accident_data[i].weather)}</p>
                 <p>道路型態: ${get_load_type_string(accident_data[i].load_type)}</p>
-                <p>道路型態: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
+                <p>事故位置: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
                 <p>距離: ${distance} km</p>
                 `);
                 node_array.push(node);
@@ -136,7 +136,7 @@ function get_nodes(accident_data, curr_latitude, curr_longitude)
                 <p>受傷程度: ${get_hurt_string(accident_data[i].injury_degree)}</p>
                 <p>天氣: ${get_weather_string(accident_data[i].weather)}</p>
                 <p>道路型態: ${get_load_type_string(accident_data[i].load_type)}</p>
-                <p>道路型態: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
+                <p>事故位置: ${get_accident_location_type_string(accident_data[i].accident_location)}</p>
                 `);
                 node_array.push(node);
         }
